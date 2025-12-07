@@ -510,10 +510,17 @@ namespace Daifugo
             Image img = cardObj.AddComponent<Image>();
             img.color = selected ? Color.yellow : Color.white;
             
+            // Explicitly set size
+            RectTransform cardRt = cardObj.GetComponent<RectTransform>();
+            if (cardRt == null) cardRt = cardObj.AddComponent<RectTransform>();
+            cardRt.sizeDelta = new Vector2(70, 100);
+
             // Layout
             LayoutElement le = cardObj.AddComponent<LayoutElement>();
-            le.minWidth = 50;
-            le.minHeight = 70;
+            le.preferredWidth = 70; // Set preferred size
+            le.preferredHeight = 100;
+            le.minWidth = 70;
+            le.minHeight = 100;
 
             // Text
             GameObject textObj = new GameObject("Text");
@@ -621,6 +628,8 @@ namespace Daifugo
             cpuHlg.childAlignment = TextAnchor.MiddleCenter;
             cpuHlg.childControlWidth = false;
             cpuHlg.childForceExpandWidth = false;
+            cpuHlg.childControlHeight = false; // Fix vertical stretch
+            cpuHlg.childForceExpandHeight = false; // Fix vertical stretch
             cpuArea = cpuObj.transform;
 
             GameObject fieldObj = new GameObject("Field Area");
@@ -628,6 +637,10 @@ namespace Daifugo
             HorizontalLayoutGroup fieldHlg = fieldObj.AddComponent<HorizontalLayoutGroup>();
             fieldHlg.childAlignment = TextAnchor.MiddleCenter;
             fieldHlg.spacing = 10;
+            fieldHlg.childControlHeight = false; 
+            fieldHlg.childForceExpandHeight = false; 
+            fieldHlg.childControlWidth = false; // Prevent horizontal stretch
+            fieldHlg.childForceExpandWidth = false; // Prevent horizontal stretch
             fieldArea = fieldObj.transform;
             LayoutElement fieldLe = fieldObj.AddComponent<LayoutElement>();
             fieldLe.minHeight = 100;
@@ -647,6 +660,10 @@ namespace Daifugo
             HorizontalLayoutGroup playerHlg = playerObj.AddComponent<HorizontalLayoutGroup>();
             playerHlg.childAlignment = TextAnchor.MiddleCenter;
             playerHlg.spacing = 5;
+            playerHlg.childControlHeight = false; 
+            playerHlg.childForceExpandHeight = false; 
+            playerHlg.childControlWidth = false; // Prevent horizontal stretch
+            playerHlg.childForceExpandWidth = false; // Prevent horizontal stretch
             playerArea = playerObj.transform;
             LayoutElement playerLe = playerObj.AddComponent<LayoutElement>();
             playerLe.minHeight = 100;
