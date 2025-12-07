@@ -21,16 +21,20 @@ namespace Daifugo
         private bool isPlayerTurn;
         private bool isRevolution;
         private bool isSuitBinding; // "Shibari"
-        private Suit? boundSuit; // If binding is active, which suit? (Only relevant for singles usually, or logic needs to handle multiples)
+        private Suit? boundSuit; // If binding is active, which suit? (Only relevant for singles usually, or logic needs to handle multiples) 
         
         private bool gameEnded;
         
+        private int matchCount = 0;
+        private int winCount = 0;
+
         // UI References
         private GameObject canvasObj;
         private GameObject mainPanel; // Game UI
         private GameObject titlePanel; // Start Screen
         private GameObject rulesPanel; // Rules Overlay
         private Text statusText;
+        private Text statsText; // New Stats UI
         private Transform fieldArea;
         private Transform playerArea;
         private Transform cpuArea;
@@ -68,7 +72,6 @@ namespace Daifugo
             // Dice Roll Phase
             statusText.text = "Rolling Dice to determine Hand Size...";
             yield return new WaitForSeconds(0.5f);
-            // ... (rest is same)
 
             // Create Dice Objects
             GameObject pDiceObj = new GameObject("PlayerDice");
@@ -223,7 +226,7 @@ namespace Daifugo
 
         public void OnPass()
         {
-            if (!isPlayerTurn) return;
+            if (!isPlayerTurn) return; 
             
             statusText.text = "You Passed. CPU leads.";
             ClearField();
@@ -401,14 +404,36 @@ namespace Daifugo
             if (hand.Count == 0)
             {
                 gameEnded = true;
-                string winner = (hand == humanHand) ? "You Win!" : "CPU Wins!";
+                matchCount++;
+                string winner;
+                if (hand == humanHand)
+                {
+                    winner = "You Win!";
+                    winCount++;
+                }
+                else
+                {
+                    winner = "CPU Wins!";
+                }
+                
                 statusText.text = winner;
+                UpdateStatsUI();
+                
                 playButton.gameObject.SetActive(false);
                 passButton.interactable = false;
                 if (retryButton != null) retryButton.gameObject.SetActive(true);
                 return true;
             }
             return false;
+        }
+
+        void UpdateStatsUI()
+        {
+            if (statsText != null)
+            {
+                float rate = matchCount > 0 ? (float)winCount / matchCount * 100f : 0f;
+                statsText.text = $"Matches: {matchCount}  Wins: {winCount}  Rate: {rate:F1}%";
+            }
         }
 
         public void OnRetry()
@@ -425,7 +450,7 @@ namespace Daifugo
 
         IEnumerator CPUTurn()
         {
-            yield return new WaitForSeconds(1.0f);
+            yield return new WaitForSeconds(1.0f); 
             
             List<Card> bestMove = null;
             var groups = cpuHand.GroupBy(c => c.rank).OrderBy(g => g.First().GetStrength(isRevolution));
@@ -630,6 +655,25 @@ namespace Daifugo
             bgRt.offsetMin = Vector2.zero;
             bgRt.offsetMax = Vector2.zero;
 
+            // Stats UI (Overlay on top left)
+            GameObject statsObj = new GameObject("StatsText");
+            statsObj.transform.SetParent(canvasObj.transform); // Attach to Canvas directly to be on top/independent
+            statsText = statsObj.AddComponent<Text>();
+            statsText.font = GetDefaultFont();
+            statsText.fontSize = 18;
+            statsText.color = Color.white;
+            statsText.alignment = TextAnchor.UpperLeft;
+            statsText.raycastTarget = false;
+            
+            RectTransform statsRt = statsObj.GetComponent<RectTransform>();
+            statsRt.anchorMin = new Vector2(0, 1);
+            statsRt.anchorMax = new Vector2(0, 1);
+            statsRt.pivot = new Vector2(0, 1);
+            statsRt.anchoredPosition = new Vector2(20, -20);
+            statsRt.sizeDelta = new Vector2(400, 30);
+            
+            UpdateStatsUI();
+
             // Main Layout
             mainPanel = new GameObject("MainPanel");
             mainPanel.transform.SetParent(canvasObj.transform);
@@ -778,15 +822,14 @@ namespace Daifugo
             closeTxtRt.offsetMax = Vector2.zero;
 
             // CPU Area (continue with main panel children)
-
             GameObject cpuObj = new GameObject("CPU Area");
             cpuObj.transform.SetParent(mainPanel.transform);
             HorizontalLayoutGroup cpuHlg = cpuObj.AddComponent<HorizontalLayoutGroup>();
             cpuHlg.childAlignment = TextAnchor.MiddleCenter;
             cpuHlg.childControlWidth = false;
             cpuHlg.childForceExpandWidth = false;
-            cpuHlg.childControlHeight = false; // Fix vertical stretch
-            cpuHlg.childForceExpandHeight = false; // Fix vertical stretch
+            cpuHlg.childControlHeight = false; 
+            cpuHlg.childForceExpandHeight = false; 
             cpuArea = cpuObj.transform;
 
             GameObject fieldObj = new GameObject("Field Area");
