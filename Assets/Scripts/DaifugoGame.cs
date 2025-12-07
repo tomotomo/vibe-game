@@ -10,7 +10,7 @@ namespace Daifugo
     public class DaifugoGame : MonoBehaviour
     {
         // Settings
-        private const int HandSize = 7;
+        // HandSize determined at runtime
 
         // State
         private List<Card> deck;
@@ -39,10 +39,46 @@ namespace Daifugo
         void Start()
         {
             SetupUI();
-            StartGame();
+            StartCoroutine(GameSequence());
         }
 
-        void StartGame()
+        IEnumerator GameSequence()
+        {
+            // Dice Roll Phase
+            statusText.text = "Rolling Dice to determine Hand Size...";
+            yield return new WaitForSeconds(0.5f);
+
+            // Create Dice Objects
+            GameObject pDiceObj = new GameObject("PlayerDice");
+            DiceAnimation pDice = pDiceObj.AddComponent<DiceAnimation>();
+            // Move Dice UP to avoid overlap with center/status
+            pDice.Setup(canvasObj.transform, new Vector2(-80, 100));
+
+            GameObject cDiceObj = new GameObject("CPUDice");
+            DiceAnimation cDice = cDiceObj.AddComponent<DiceAnimation>();
+            cDice.Setup(canvasObj.transform, new Vector2(80, 100));
+
+            int pRoll = UnityEngine.Random.Range(1, 7);
+            int cRoll = UnityEngine.Random.Range(1, 7);
+            
+            pDice.Roll(pRoll);
+            cDice.Roll(cRoll);
+
+            yield return new WaitForSeconds(1.5f); // Wait for animation
+
+            int total = pRoll + cRoll;
+
+            statusText.text = $"Total: {total} Cards (You: {pRoll}, CPU: {cRoll})";
+            yield return new WaitForSeconds(2.0f);
+
+            // Cleanup Dice
+            Destroy(pDiceObj);
+            Destroy(cDiceObj);
+
+            InitializeRound(total);
+        }
+
+        void InitializeRound(int handSize)
         {
             // Reset State
             gameEnded = false;
@@ -77,10 +113,13 @@ namespace Daifugo
             // Deal
             humanHand = new List<Card>();
             cpuHand = new List<Card>();
-            for (int i = 0; i < HandSize; i++)
+            
+            // Ensure we don't exceed deck size (52 cards total, 26 max per person if dealing all, but here total * 2)
+            // total is max 12, so 24 cards. Safe.
+            for (int i = 0; i < handSize; i++)
             {
-                humanHand.Add(deck[0]); deck.RemoveAt(0);
-                cpuHand.Add(deck[0]); deck.RemoveAt(0);
+                if (deck.Count > 0) { humanHand.Add(deck[0]); deck.RemoveAt(0); }
+                if (deck.Count > 0) { cpuHand.Add(deck[0]); deck.RemoveAt(0); }
             }
 
             // Sort Hands
@@ -580,6 +619,19 @@ namespace Daifugo
 
             GameObject statusObj = new GameObject("Status");
             statusObj.transform.SetParent(mainPanel.transform);
+            // Move status text out of layout group or adjust? 
+            // The layout group forces position. 
+            // Better: Make Status separate from MainPanel Layout, or put it at top.
+            // Current structure: MainPanel (Vertical) -> CPU, Field, Status, Player, Buttons.
+            // Field is empty at start. Dice are at (0,0) (Center of Canvas).
+            // MainPanel is stretched 0-1.
+            // Let's modify SetupUI to not put everything in one VLG, or ensure center is empty.
+            // Easiest fix for overlay: Move Dice positions UP or DOWN, or adjust Status Text z-order/position.
+            // But user says "White square" overlaps. That's the dice background.
+            // And "Dice face not shown" -> Font issue? Or color?
+            // Dice text color is black. Background white.
+            // If text is not showing, maybe font not found or rect size issue.
+            
             statusText = statusObj.AddComponent<Text>();
             statusText.alignment = TextAnchor.MiddleCenter;
             statusText.font = GetDefaultFont();
