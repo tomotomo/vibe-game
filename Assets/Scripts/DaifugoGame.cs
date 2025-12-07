@@ -33,6 +33,7 @@ namespace Daifugo
         private Transform cpuArea;
         private Button playButton;
         private Button passButton;
+        private Button retryButton;
         
         private List<int> selectedIndices = new List<int>();
 
@@ -82,6 +83,7 @@ namespace Daifugo
         {
             // Reset State
             gameEnded = false;
+            if (retryButton != null) retryButton.gameObject.SetActive(false);
             isRevolution = false;
             isSuitBinding = false;
             boundSuit = null;
@@ -380,11 +382,24 @@ namespace Daifugo
                 gameEnded = true;
                 string winner = (hand == humanHand) ? "You Win!" : "CPU Wins!";
                 statusText.text = winner;
-                playButton.interactable = false;
+                playButton.gameObject.SetActive(false);
                 passButton.interactable = false;
+                if (retryButton != null) retryButton.gameObject.SetActive(true);
                 return true;
             }
             return false;
+        }
+
+        public void OnRetry()
+        {
+            if (retryButton != null) retryButton.gameObject.SetActive(false);
+            
+            // Clean up UI
+            foreach (Transform t in fieldArea) Destroy(t.gameObject);
+            foreach (Transform t in playerArea) Destroy(t.gameObject);
+            foreach (Transform t in cpuArea) Destroy(t.gameObject);
+
+            StartCoroutine(GameSequence());
         }
 
         IEnumerator CPUTurn()
@@ -619,19 +634,6 @@ namespace Daifugo
 
             GameObject statusObj = new GameObject("Status");
             statusObj.transform.SetParent(mainPanel.transform);
-            // Move status text out of layout group or adjust? 
-            // The layout group forces position. 
-            // Better: Make Status separate from MainPanel Layout, or put it at top.
-            // Current structure: MainPanel (Vertical) -> CPU, Field, Status, Player, Buttons.
-            // Field is empty at start. Dice are at (0,0) (Center of Canvas).
-            // MainPanel is stretched 0-1.
-            // Let's modify SetupUI to not put everything in one VLG, or ensure center is empty.
-            // Easiest fix for overlay: Move Dice positions UP or DOWN, or adjust Status Text z-order/position.
-            // But user says "White square" overlaps. That's the dice background.
-            // And "Dice face not shown" -> Font issue? Or color?
-            // Dice text color is black. Background white.
-            // If text is not showing, maybe font not found or rect size issue.
-            
             statusText = statusObj.AddComponent<Text>();
             statusText.alignment = TextAnchor.MiddleCenter;
             statusText.font = GetDefaultFont();
@@ -702,6 +704,32 @@ namespace Daifugo
             playTxtRt.anchorMax = Vector2.one;
             playTxtRt.offsetMin = Vector2.zero;
             playTxtRt.offsetMax = Vector2.zero;
+            
+            // Retry Button
+            GameObject retryBtnObj = new GameObject("RetryButton");
+            retryBtnObj.transform.SetParent(mainPanel.transform); // Put at bottom
+            Image retryImg = retryBtnObj.AddComponent<Image>();
+            retryImg.color = Color.green;
+            retryButton = retryBtnObj.AddComponent<Button>();
+            retryButton.onClick.AddListener(OnRetry);
+            LayoutElement retryLe = retryBtnObj.AddComponent<LayoutElement>();
+            retryLe.minHeight = 50;
+            GameObject retryTxtObj = new GameObject("Text");
+            retryTxtObj.transform.SetParent(retryBtnObj.transform);
+            Text retryTxt = retryTxtObj.AddComponent<Text>();
+            retryTxt.text = "RETRY";
+            retryTxt.font = GetDefaultFont();
+            retryTxt.color = Color.black;
+            retryTxt.alignment = TextAnchor.MiddleCenter;
+            retryTxt.fontSize = 24;
+            retryTxt.raycastTarget = false;
+            RectTransform retryTxtRt = retryTxtObj.GetComponent<RectTransform>();
+            retryTxtRt.anchorMin = Vector2.zero;
+            retryTxtRt.anchorMax = Vector2.one;
+            retryTxtRt.offsetMin = Vector2.zero;
+            retryTxtRt.offsetMax = Vector2.zero;
+            
+            retryButton.gameObject.SetActive(false);
         }
     }
 }
