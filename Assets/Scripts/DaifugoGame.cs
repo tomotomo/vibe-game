@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-
 using UnityEngine.EventSystems;
 
 namespace Daifugo
@@ -138,32 +137,14 @@ namespace Daifugo
             // 5. Shibari (Suit Binding) Check
             if (isSuitBinding && boundSuit.HasValue)
             {
-                // Simple Shibari: Single card binding.
-                // If multiple cards, usually binding requires matching ALL suits.
-                // For simplified impl, let's check if the selected cards CONTAIN the bound suit?
-                // Actually, standard binding: "If the suits played match the suits on the field, subsequent plays must match those suits".
-                // Simplification for 1v1: If single card played, check suit.
-                
                 if (selected.Count == 1)
                 {
                     if (selected[0].suit != boundSuit.Value) return false;
                 }
                 else
                 {
-                    // For pairs/triples, strict binding requires matching the exact suit combination.
-                    // This is complex. Let's stick to Single card binding for MVP or check exact match if binding is active.
-                    // If we are in a "Bound" state, we must match field suits.
-                    // Checking which suits are on field:
-                    // This logic gets complicated.
-                    // Let's implement: "Lock" happens if play matches field suits.
-                    // If lock is active, play must match field suits.
-                    
-                    // Let's implement this later in "CheckBind".
-                    // Here, we just check if we are violating an EXISTING lock.
                     if (isSuitBinding)
                     {
-                        // Check if current play matches the suits of the field
-                        // (Requires sorting suits to compare)
                         var selectedSuits = selected.Select(c => c.suit).OrderBy(s => s).ToList();
                         var fieldSuits = fieldCards.Select(c => c.suit).OrderBy(s => s).ToList();
                         
@@ -182,9 +163,6 @@ namespace Daifugo
         {
             if (!isPlayerTurn) return;
             
-            // Player passes.
-            // In 1v1, if one passes, the other leads. 
-            // So field is cleared.
             statusText.text = "You Passed. CPU leads.";
             ClearField();
             isPlayerTurn = false;
@@ -192,7 +170,66 @@ namespace Daifugo
             StartCoroutine(CPUTurn());
         }
 
-        public void OnPlay()
+        // Unified Card Interaction
+        public void OnCardClicked(int index)
+        {
+            if (!isPlayerTurn) return;
+
+            // If field is empty (Lead), we use Selection Mode -> Play Button
+            if (fieldCards.Count == 0)
+            {
+                ToggleCardSelection(index);
+            }
+            // If field has cards (Follow), we use Smart Instant Play
+            else
+            {
+                SmartPlay(index);
+            }
+        }
+
+        void ToggleCardSelection(int index)
+        {
+            if (selectedIndices.Contains(index))
+                selectedIndices.Remove(index);
+            else
+                selectedIndices.Add(index);
+            
+            UpdateUI();
+        }
+
+        void SmartPlay(int index)
+        {
+            Card clickedCard = humanHand[index];
+            List<Card> candidates = humanHand.Where(c => c.rank == clickedCard.rank).ToList();
+            List<Card> toPlay = new List<Card>();
+
+            int required = fieldCards.Count;
+            if (candidates.Count >= required)
+            {
+                // Prioritize including the clicked card
+                toPlay.Add(clickedCard);
+                foreach(var c in candidates)
+                {
+                    if (toPlay.Count >= required) break;
+                    if (c != clickedCard) toPlay.Add(c);
+                }
+
+                if (CanPlay(toPlay))
+                {
+                    ExecutePlay(toPlay);
+                }
+                else
+                {
+                    statusText.text = "Cannot play this.";
+                }
+            }
+            else
+            {
+                statusText.text = "Need " + required + " cards.";
+            }
+        }
+
+        public void OnPlayButtonPressed()
         {
             if (!isPlayerTurn) return;
 
@@ -204,23 +241,7 @@ namespace Daifugo
 
             if (CanPlay(selected))
             {
-                PlayCards(humanHand, selected);
-                selectedIndices.Clear();
-                
-                if (CheckWin(humanHand)) return;
-
-                // Handle Turn Check (Special rules might keep turn)
-                if (CheckSpecialTurnRules(selected))
-                {
-                    // Player plays again
-                    statusText.text = "Special Effect! Play again.";
-                    UpdateUI();
-                    return; 
-                }
-
-                isPlayerTurn = false;
-                UpdateUI();
-                StartCoroutine(CPUTurn());
+                ExecutePlay(selected);
             }
             else
             {
@@ -228,19 +249,35 @@ namespace Daifugo
             }
         }
 
+        void ExecutePlay(List<Card> toPlay)
+        {
+            PlayCards(humanHand, toPlay);
+            selectedIndices.Clear();
+            
+            if (CheckWin(humanHand)) return;
+
+            if (CheckSpecialTurnRules(toPlay))
+            {
+                statusText.text = "Special Effect! Play again.";
+                UpdateUI();
+                return; 
+            }
+
+            isPlayerTurn = false;
+            UpdateUI();
+            StartCoroutine(CPUTurn());
+        }
+
         void PlayCards(List<Card> hand, List<Card> toPlay)
         {
-            // Check Binding before updating field
             CheckSuitBinding(toPlay);
 
-            // Move to field
             fieldCards = new List<Card>(toPlay);
             foreach (var c in toPlay)
             {
                 hand.Remove(c);
             }
 
-            // Check Revolution (11 Back)
             if (fieldCards[0].rank == 11)
             {
                 isRevolution = true;
@@ -259,13 +296,8 @@ namespace Daifugo
                 return;
             }
 
-            // If already bound, ignore (we already validated in CanPlay)
             if (isSuitBinding) return;
 
-            // Check if this play TRIGGERS binding
-            // Compare suits of toPlay vs fieldCards (previous)
-            // Assumes same count (validated in CanPlay)
-            
             var playSuits = toPlay.Select(c => c.suit).OrderBy(s => s).ToList();
             var fieldSuits = fieldCards.Select(c => c.suit).OrderBy(s => s).ToList();
 
@@ -282,7 +314,6 @@ namespace Daifugo
             if (match)
             {
                 isSuitBinding = true;
-                // For single card, easy to track. For multi, "isSuitBinding" flag implies we must match field suits.
                 if (toPlay.Count == 1) boundSuit = toPlay[0].suit;
             }
         }
@@ -290,21 +321,8 @@ namespace Daifugo
         bool CheckSpecialTurnRules(List<Card> played)
         {
             int r = played[0].rank;
-            
-            // 8 Cut
-            if (r == 8)
-            {
-                ClearField();
-                return true; // Play again
-            }
-
-            // 5 Skip
-            if (r == 5)
-            {
-                // In 1v1, skip opponent = play again
-                return true;
-            }
-
+            if (r == 8) { ClearField(); return true; }
+            if (r == 5) return true;
             return false;
         }
 
@@ -313,17 +331,7 @@ namespace Daifugo
             fieldCards.Clear();
             isSuitBinding = false;
             boundSuit = null;
-            // 11 Back usually lasts until field cleared? 
-            // "11 Back" implies J is strong. Often it's temporary.
-            // Let's reset Revolution if it was triggered by 11 Back?
-            // Actually, J-Back usually means "Revolution while J is in play" or "Until sweep".
-            // I'll assume it resets on sweep.
-            if (isRevolution)
-            {
-                // Did we have a permanent Revolution (4 cards)? Not in spec.
-                // Assuming 11 Back is the only revolution source here.
-                isRevolution = false; 
-            }
+            if (isRevolution) isRevolution = false; 
         }
 
         bool CheckWin(List<Card> hand)
@@ -343,37 +351,21 @@ namespace Daifugo
         IEnumerator CPUTurn()
         {
             yield return new WaitForSeconds(1.0f);
-
-            // Simple AI: Find lowest valid play
-            // Try 1 card, then 2 cards, etc? 
-            // Just scan all combinations?
-            // Since we sort hand, iterating is easier.
             
             List<Card> bestMove = null;
-
-            // Group hand by rank
             var groups = cpuHand.GroupBy(c => c.rank).OrderBy(g => g.First().GetStrength(isRevolution));
 
             foreach (var g in groups)
             {
                 var candidates = g.ToList();
                 
-                // Try to play as many as possible or match field?
-                // If field is empty, play lowest single or pair?
-                // Greedy: Play lowest possible that works.
-                
                 if (fieldCards.Count == 0)
                 {
-                    // Play lowest single (or pair if we have it?)
-                    // Let's just play lowest single for simplicity or lowest set
                     bestMove = new List<Card> { candidates[0] };
-                    // If we have pair, maybe play pair?
-                    // Let's stick to simple legal moves.
                     break;
                 }
                 else
                 {
-                    // Must match count
                     if (candidates.Count >= fieldCards.Count)
                     {
                         var attempt = candidates.Take(fieldCards.Count).ToList();
@@ -393,7 +385,7 @@ namespace Daifugo
 
                 if (CheckSpecialTurnRules(bestMove))
                 {
-                    StartCoroutine(CPUTurn()); // CPU plays again
+                    StartCoroutine(CPUTurn());
                 }
                 else
                 {
@@ -404,7 +396,6 @@ namespace Daifugo
             }
             else
             {
-                // Pass
                 statusText.text = "CPU Passed. Your lead.";
                 ClearField();
                 isPlayerTurn = true;
@@ -413,18 +404,6 @@ namespace Daifugo
         }
 
         // --- UI Handling ---
-        
-        public void ToggleCardSelection(int index)
-        {
-            if (!isPlayerTurn) return;
-
-            if (selectedIndices.Contains(index))
-                selectedIndices.Remove(index);
-            else
-                selectedIndices.Add(index);
-            
-            UpdateUI();
-        }
 
         void UpdateUI()
         {
@@ -458,20 +437,15 @@ namespace Daifugo
             }
 
             // Buttons
-            playButton.interactable = isPlayerTurn;
-            passButton.interactable = isPlayerTurn;
-        }
+            // Show Play button ONLY if it's Player Turn AND Field is Empty (Lead mode)
+            bool showPlayButton = isPlayerTurn && fieldCards.Count == 0;
+            playButton.gameObject.SetActive(showPlayButton);
+            if (showPlayButton)
+            {
+                playButton.interactable = selectedIndices.Count > 0;
+            }
 
-        // --- Helper ---
-        Font GetDefaultFont()
-        {
-            Font f = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            if (f != null) return f;
-            
-            var allFonts = Resources.FindObjectsOfTypeAll<Font>();
-            if (allFonts != null && allFonts.Length > 0) return allFonts[0];
-            
-            return null; // Should not happen in standard Unity env, but UI Text handles null font gracefully (no text).
+            passButton.interactable = isPlayerTurn;
         }
 
         void CreateCardUI(Card c, Transform parent, bool clickable, int index, bool selected = false)
@@ -493,6 +467,7 @@ namespace Daifugo
             Text t = textObj.AddComponent<Text>();
             t.text = c.ToString();
             t.font = GetDefaultFont();
+            t.raycastTarget = false; // Fix: Disable raycast to allow button click
             
             // Set text color based on suit
             if (c.suit == Suit.Heart || c.suit == Suit.Diamond)
@@ -514,7 +489,7 @@ namespace Daifugo
             if (clickable)
             {
                 Button b = cardObj.AddComponent<Button>();
-                b.onClick.AddListener(() => ToggleCardSelection(index));
+                b.onClick.AddListener(() => OnCardClicked(index));
             }
         }
 
@@ -525,15 +500,30 @@ namespace Daifugo
             Text t = textObj.AddComponent<Text>();
             t.text = content;
             t.font = GetDefaultFont();
+            t.raycastTarget = false;
             t.color = Color.white;
             t.fontSize = 20;
             LayoutElement le = textObj.AddComponent<LayoutElement>();
             le.minHeight = 30;
         }
 
+        // --- Helper ---
+        Font GetDefaultFont()
+        {
+            Font f = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            if (f != null) return f;
+            
+            f = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (f != null) return f;
+            
+            var allFonts = Resources.FindObjectsOfTypeAll<Font>();
+            if (allFonts != null && allFonts.Length > 0) return allFonts[0];
+            
+            return null; // Should not happen in standard Unity env, but UI Text handles null font gracefully (no text).
+        }
+
         void SetupUI()
         {
-            // EventSystem
             if (FindObjectOfType<EventSystem>() == null)
             {
                 GameObject eventSystem = new GameObject("EventSystem");
@@ -541,25 +531,23 @@ namespace Daifugo
                 eventSystem.AddComponent<StandaloneInputModule>();
             }
 
-            // Canvas
             canvasObj = new GameObject("Canvas");
             Canvas c = canvasObj.AddComponent<Canvas>();
             c.renderMode = RenderMode.ScreenSpaceOverlay;
             canvasObj.AddComponent<CanvasScaler>();
             canvasObj.AddComponent<GraphicRaycaster>();
 
-            // Background
             GameObject bg = new GameObject("Background");
             bg.transform.SetParent(canvasObj.transform);
             Image bgImg = bg.AddComponent<Image>();
-            bgImg.color = new Color(0.1f, 0.4f, 0.1f); // Green table
+            bgImg.color = new Color(0.1f, 0.4f, 0.1f);
+            bgImg.raycastTarget = false; // Background shouldn't block? Actually it's fine, it's at back.
             RectTransform bgRt = bg.GetComponent<RectTransform>();
             bgRt.anchorMin = Vector2.zero;
             bgRt.anchorMax = Vector2.one;
             bgRt.offsetMin = Vector2.zero;
             bgRt.offsetMax = Vector2.zero;
 
-            // Main Layout
             GameObject mainPanel = new GameObject("MainPanel");
             mainPanel.transform.SetParent(canvasObj.transform);
             VerticalLayoutGroup vlg = mainPanel.AddComponent<VerticalLayoutGroup>();
@@ -573,7 +561,6 @@ namespace Daifugo
             mainRt.offsetMin = Vector2.zero;
             mainRt.offsetMax = Vector2.zero;
 
-            // CPU Area
             GameObject cpuObj = new GameObject("CPU Area");
             cpuObj.transform.SetParent(mainPanel.transform);
             HorizontalLayoutGroup cpuHlg = cpuObj.AddComponent<HorizontalLayoutGroup>();
@@ -582,7 +569,6 @@ namespace Daifugo
             cpuHlg.childForceExpandWidth = false;
             cpuArea = cpuObj.transform;
 
-            // Field Area
             GameObject fieldObj = new GameObject("Field Area");
             fieldObj.transform.SetParent(mainPanel.transform);
             HorizontalLayoutGroup fieldHlg = fieldObj.AddComponent<HorizontalLayoutGroup>();
@@ -592,7 +578,6 @@ namespace Daifugo
             LayoutElement fieldLe = fieldObj.AddComponent<LayoutElement>();
             fieldLe.minHeight = 100;
 
-            // Status Text
             GameObject statusObj = new GameObject("Status");
             statusObj.transform.SetParent(mainPanel.transform);
             statusText = statusObj.AddComponent<Text>();
@@ -601,8 +586,8 @@ namespace Daifugo
             statusText.fontSize = 24;
             statusText.color = Color.yellow;
             statusText.text = "Initializing...";
+            statusText.raycastTarget = false;
             
-            // Player Area
             GameObject playerObj = new GameObject("Player Area");
             playerObj.transform.SetParent(mainPanel.transform);
             HorizontalLayoutGroup playerHlg = playerObj.AddComponent<HorizontalLayoutGroup>();
@@ -612,7 +597,6 @@ namespace Daifugo
             LayoutElement playerLe = playerObj.AddComponent<LayoutElement>();
             playerLe.minHeight = 100;
 
-            // Buttons Area
             GameObject btnObj = new GameObject("Buttons");
             btnObj.transform.SetParent(mainPanel.transform);
             HorizontalLayoutGroup btnHlg = btnObj.AddComponent<HorizontalLayoutGroup>();
@@ -636,19 +620,20 @@ namespace Daifugo
             passTxt.font = GetDefaultFont();
             passTxt.color = Color.black;
             passTxt.alignment = TextAnchor.MiddleCenter;
+            passTxt.raycastTarget = false;
             RectTransform passTxtRt = passTxtObj.GetComponent<RectTransform>();
             passTxtRt.anchorMin = Vector2.zero;
             passTxtRt.anchorMax = Vector2.one;
             passTxtRt.offsetMin = Vector2.zero;
             passTxtRt.offsetMax = Vector2.zero;
 
-            // Play Button
+            // Play Button (Re-added)
             GameObject playBtnObj = new GameObject("PlayButton");
             playBtnObj.transform.SetParent(btnObj.transform);
             Image playImg = playBtnObj.AddComponent<Image>();
             playImg.color = Color.cyan;
             playButton = playBtnObj.AddComponent<Button>();
-            playButton.onClick.AddListener(OnPlay);
+            playButton.onClick.AddListener(OnPlayButtonPressed);
             LayoutElement playLe = playBtnObj.AddComponent<LayoutElement>();
             playLe.minWidth = 100;
             playLe.minHeight = 40;
@@ -659,6 +644,7 @@ namespace Daifugo
             playTxt.font = GetDefaultFont();
             playTxt.color = Color.black;
             playTxt.alignment = TextAnchor.MiddleCenter;
+            playTxt.raycastTarget = false;
             RectTransform playTxtRt = playTxtObj.GetComponent<RectTransform>();
             playTxtRt.anchorMin = Vector2.zero;
             playTxtRt.anchorMax = Vector2.one;
