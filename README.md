@@ -1,5 +1,7 @@
 # Daifugo (Millionaire) - One-on-One Card Game
 
+[English](README.md) | [日本語](README_JP.md)
+
 A simple yet engaging 1vs1 implementation of the popular Japanese card game "Daifugo" (Millionaire), built with Unity and generated using Gemini CLI.
 
 ## Features
