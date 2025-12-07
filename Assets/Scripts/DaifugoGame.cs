@@ -27,6 +27,9 @@ namespace Daifugo
         
         // UI References
         private GameObject canvasObj;
+        private GameObject mainPanel; // Game UI
+        private GameObject titlePanel; // Start Screen
+        private GameObject rulesPanel; // Rules Overlay
         private Text statusText;
         private Transform fieldArea;
         private Transform playerArea;
@@ -40,7 +43,24 @@ namespace Daifugo
         void Start()
         {
             SetupUI();
+            // StartCoroutine(GameSequence()); // Wait for Start Button
+        }
+
+        public void OnStartGamePressed()
+        {
+            titlePanel.SetActive(false);
+            mainPanel.SetActive(true);
             StartCoroutine(GameSequence());
+        }
+
+        public void OnRulesPressed()
+        {
+            rulesPanel.SetActive(true);
+        }
+
+        public void OnCloseRulesPressed()
+        {
+            rulesPanel.SetActive(false);
         }
 
         IEnumerator GameSequence()
@@ -48,6 +68,7 @@ namespace Daifugo
             // Dice Roll Phase
             statusText.text = "Rolling Dice to determine Hand Size...";
             yield return new WaitForSeconds(0.5f);
+            // ... (rest is same)
 
             // Create Dice Objects
             GameObject pDiceObj = new GameObject("PlayerDice");
@@ -609,8 +630,10 @@ namespace Daifugo
             bgRt.offsetMin = Vector2.zero;
             bgRt.offsetMax = Vector2.zero;
 
-            GameObject mainPanel = new GameObject("MainPanel");
+            // Main Layout
+            mainPanel = new GameObject("MainPanel");
             mainPanel.transform.SetParent(canvasObj.transform);
+            mainPanel.SetActive(false); // Hide initially
             VerticalLayoutGroup vlg = mainPanel.AddComponent<VerticalLayoutGroup>();
             vlg.childControlHeight = false;
             vlg.childForceExpandHeight = false;
@@ -621,6 +644,140 @@ namespace Daifugo
             mainRt.anchorMax = Vector2.one;
             mainRt.offsetMin = Vector2.zero;
             mainRt.offsetMax = Vector2.zero;
+
+            // --- Title Screen ---
+            titlePanel = new GameObject("TitlePanel");
+            titlePanel.transform.SetParent(canvasObj.transform);
+            Image titleBg = titlePanel.AddComponent<Image>();
+            titleBg.color = new Color(0.1f, 0.4f, 0.1f); // Same green bg
+            RectTransform titleRt = titlePanel.GetComponent<RectTransform>();
+            titleRt.anchorMin = Vector2.zero;
+            titleRt.anchorMax = Vector2.one;
+            titleRt.offsetMin = Vector2.zero;
+            titleRt.offsetMax = Vector2.zero;
+
+            VerticalLayoutGroup titleVlg = titlePanel.AddComponent<VerticalLayoutGroup>();
+            titleVlg.childAlignment = TextAnchor.MiddleCenter;
+            titleVlg.spacing = 30;
+
+            GameObject titleTextObj = new GameObject("Title");
+            titleTextObj.transform.SetParent(titlePanel.transform);
+            Text titleText = titleTextObj.AddComponent<Text>();
+            titleText.text = "DAIFUGO";
+            titleText.font = GetDefaultFont();
+            titleText.fontSize = 60;
+            titleText.alignment = TextAnchor.MiddleCenter;
+            titleText.color = Color.yellow;
+            LayoutElement titleLe = titleTextObj.AddComponent<LayoutElement>();
+            titleLe.minHeight = 80;
+
+            // Start Button
+            GameObject startBtnObj = new GameObject("StartButton");
+            startBtnObj.transform.SetParent(titlePanel.transform);
+            Image startImg = startBtnObj.AddComponent<Image>();
+            startImg.color = Color.white;
+            Button startBtn = startBtnObj.AddComponent<Button>();
+            startBtn.onClick.AddListener(OnStartGamePressed);
+            LayoutElement startLe = startBtnObj.AddComponent<LayoutElement>();
+            startLe.minWidth = 200;
+            startLe.minHeight = 60;
+            GameObject startTxtObj = new GameObject("Text");
+            startTxtObj.transform.SetParent(startBtnObj.transform);
+            Text startTxt = startTxtObj.AddComponent<Text>();
+            startTxt.text = "START GAME";
+            startTxt.font = GetDefaultFont();
+            startTxt.color = Color.black;
+            startTxt.alignment = TextAnchor.MiddleCenter;
+            startTxt.fontSize = 24;
+            startTxt.raycastTarget = false;
+            RectTransform startTxtRt = startTxtObj.GetComponent<RectTransform>();
+            startTxtRt.anchorMin = Vector2.zero;
+            startTxtRt.anchorMax = Vector2.one;
+            startTxtRt.offsetMin = Vector2.zero;
+            startTxtRt.offsetMax = Vector2.zero;
+
+            // Rules Button
+            GameObject rulesBtnObj = new GameObject("RulesButton");
+            rulesBtnObj.transform.SetParent(titlePanel.transform);
+            Image rulesImg = rulesBtnObj.AddComponent<Image>();
+            rulesImg.color = Color.white;
+            Button rulesBtn = rulesBtnObj.AddComponent<Button>();
+            rulesBtn.onClick.AddListener(OnRulesPressed);
+            LayoutElement rulesLe = rulesBtnObj.AddComponent<LayoutElement>();
+            rulesLe.minWidth = 200;
+            rulesLe.minHeight = 60;
+            GameObject rulesTxtObj = new GameObject("Text");
+            rulesTxtObj.transform.SetParent(rulesBtnObj.transform);
+            Text rulesTxt = rulesTxtObj.AddComponent<Text>();
+            rulesTxt.text = "RULES";
+            rulesTxt.font = GetDefaultFont();
+            rulesTxt.color = Color.black;
+            rulesTxt.alignment = TextAnchor.MiddleCenter;
+            rulesTxt.fontSize = 24;
+            rulesTxt.raycastTarget = false;
+            RectTransform rulesTxtRt = rulesTxtObj.GetComponent<RectTransform>();
+            rulesTxtRt.anchorMin = Vector2.zero;
+            rulesTxtRt.anchorMax = Vector2.one;
+            rulesTxtRt.offsetMin = Vector2.zero;
+            rulesTxtRt.offsetMax = Vector2.zero;
+
+            // --- Rules Panel ---
+            rulesPanel = new GameObject("RulesPanel");
+            rulesPanel.transform.SetParent(canvasObj.transform);
+            rulesPanel.SetActive(false);
+            Image rulesBg = rulesPanel.AddComponent<Image>();
+            rulesBg.color = new Color(0, 0, 0, 0.9f);
+            RectTransform rulesRt = rulesPanel.GetComponent<RectTransform>();
+            rulesRt.anchorMin = Vector2.zero;
+            rulesRt.anchorMax = Vector2.one;
+            rulesRt.offsetMin = Vector2.zero;
+            rulesRt.offsetMax = Vector2.zero;
+            
+            VerticalLayoutGroup rulesVlg = rulesPanel.AddComponent<VerticalLayoutGroup>();
+            rulesVlg.childAlignment = TextAnchor.MiddleCenter;
+            rulesVlg.padding = new RectOffset(50, 50, 50, 50);
+            rulesVlg.spacing = 20;
+
+            GameObject rulesContentObj = new GameObject("Content");
+            rulesContentObj.transform.SetParent(rulesPanel.transform);
+            Text rulesContent = rulesContentObj.AddComponent<Text>();
+            rulesContent.font = GetDefaultFont();
+            rulesContent.fontSize = 20;
+            rulesContent.color = Color.white;
+            rulesContent.text = "--- RULES ---\n\n" +
+                                "8 CUT: Clears the field.\n" +
+                                "5 SKIP: Skips opponent's turn.\n" +
+                                "11 BACK: Temporary Revolution (J).\n" +
+                                "SUIT BINDING: Matching suit locks suit.\n" +
+                                "WIN: Empty your hand first.";
+            rulesContent.alignment = TextAnchor.MiddleCenter;
+            LayoutElement rulesContentLe = rulesContentObj.AddComponent<LayoutElement>();
+            rulesContentLe.minHeight = 300;
+
+            GameObject closeBtnObj = new GameObject("CloseButton");
+            closeBtnObj.transform.SetParent(rulesPanel.transform);
+            Image closeImg = closeBtnObj.AddComponent<Image>();
+            closeImg.color = Color.red;
+            Button closeBtn = closeBtnObj.AddComponent<Button>();
+            closeBtn.onClick.AddListener(OnCloseRulesPressed);
+            LayoutElement closeLe = closeBtnObj.AddComponent<LayoutElement>();
+            closeLe.minWidth = 150;
+            closeLe.minHeight = 50;
+            GameObject closeTxtObj = new GameObject("Text");
+            closeTxtObj.transform.SetParent(closeBtnObj.transform);
+            Text closeTxt = closeTxtObj.AddComponent<Text>();
+            closeTxt.text = "CLOSE";
+            closeTxt.font = GetDefaultFont();
+            closeTxt.color = Color.white;
+            closeTxt.alignment = TextAnchor.MiddleCenter;
+            closeTxt.raycastTarget = false;
+            RectTransform closeTxtRt = closeTxtObj.GetComponent<RectTransform>();
+            closeTxtRt.anchorMin = Vector2.zero;
+            closeTxtRt.anchorMax = Vector2.one;
+            closeTxtRt.offsetMin = Vector2.zero;
+            closeTxtRt.offsetMax = Vector2.zero;
+
+            // CPU Area (continue with main panel children)
 
             GameObject cpuObj = new GameObject("CPU Area");
             cpuObj.transform.SetParent(mainPanel.transform);
