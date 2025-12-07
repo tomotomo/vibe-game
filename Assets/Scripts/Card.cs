@@ -45,7 +45,17 @@ namespace Daifugo
             if (rank == 13) r = "K";
             if (rank == 14) r = "A";
             if (rank == 15) r = "2";
-            return $"{suit} {r}";
+
+            string s;
+            switch (suit)
+            {
+                case Suit.Spade: s = "♠️"; break;
+                case Suit.Heart: s = "♥️"; break;
+                case Suit.Diamond: s = "♦️"; break;
+                case Suit.Club: s = "♣️"; break;
+                default: s = "?"; break;
+            }
+            return $"{s}{r}";
         }
 
         public int CompareTo(Card other)

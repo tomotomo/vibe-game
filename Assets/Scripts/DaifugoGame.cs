@@ -462,6 +462,18 @@ namespace Daifugo
             passButton.interactable = isPlayerTurn;
         }
 
+        // --- Helper ---
+        Font GetDefaultFont()
+        {
+            Font f = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            if (f != null) return f;
+            
+            var allFonts = Resources.FindObjectsOfTypeAll<Font>();
+            if (allFonts != null && allFonts.Length > 0) return allFonts[0];
+            
+            return null; // Should not happen in standard Unity env, but UI Text handles null font gracefully (no text).
+        }
+
         void CreateCardUI(Card c, Transform parent, bool clickable, int index, bool selected = false)
         {
             GameObject cardObj = new GameObject(c.ToString());
@@ -480,9 +492,17 @@ namespace Daifugo
             textObj.transform.SetParent(cardObj.transform);
             Text t = textObj.AddComponent<Text>();
             t.text = c.ToString();
-            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); // Common unity default font access? Or Arial.
-            if (t.font == null) t.font = Resources.FindObjectsOfTypeAll<Font>()[0];
-            t.color = Color.black;
+            t.font = GetDefaultFont();
+            
+            // Set text color based on suit
+            if (c.suit == Suit.Heart || c.suit == Suit.Diamond)
+            {
+                t.color = Color.red;
+            }
+            else
+            {
+                t.color = Color.black;
+            }
             t.alignment = TextAnchor.MiddleCenter;
             t.resizeTextForBestFit = true;
             RectTransform rt = textObj.GetComponent<RectTransform>();
@@ -504,7 +524,7 @@ namespace Daifugo
             textObj.transform.SetParent(parent);
             Text t = textObj.AddComponent<Text>();
             t.text = content;
-            t.font = Resources.FindObjectsOfTypeAll<Font>()[0];
+            t.font = GetDefaultFont();
             t.color = Color.white;
             t.fontSize = 20;
             LayoutElement le = textObj.AddComponent<LayoutElement>();
@@ -577,7 +597,7 @@ namespace Daifugo
             statusObj.transform.SetParent(mainPanel.transform);
             statusText = statusObj.AddComponent<Text>();
             statusText.alignment = TextAnchor.MiddleCenter;
-            statusText.font = Resources.FindObjectsOfTypeAll<Font>()[0];
+            statusText.font = GetDefaultFont();
             statusText.fontSize = 24;
             statusText.color = Color.yellow;
             statusText.text = "Initializing...";
@@ -613,7 +633,7 @@ namespace Daifugo
             passTxtObj.transform.SetParent(passBtnObj.transform);
             Text passTxt = passTxtObj.AddComponent<Text>();
             passTxt.text = "PASS";
-            passTxt.font = Resources.FindObjectsOfTypeAll<Font>()[0];
+            passTxt.font = GetDefaultFont();
             passTxt.color = Color.black;
             passTxt.alignment = TextAnchor.MiddleCenter;
             RectTransform passTxtRt = passTxtObj.GetComponent<RectTransform>();
@@ -636,7 +656,7 @@ namespace Daifugo
             playTxtObj.transform.SetParent(playBtnObj.transform);
             Text playTxt = playTxtObj.AddComponent<Text>();
             playTxt.text = "PLAY";
-            playTxt.font = Resources.FindObjectsOfTypeAll<Font>()[0];
+            playTxt.font = GetDefaultFont();
             playTxt.color = Color.black;
             playTxt.alignment = TextAnchor.MiddleCenter;
             RectTransform playTxtRt = playTxtObj.GetComponent<RectTransform>();
