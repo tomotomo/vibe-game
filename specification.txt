@@ -91,3 +91,12 @@ UIはすべて英語表記
     - MonoBehaviourベースだが、ロジックとビューの分離を意識する。
     - `uGUI` をスクリプトから構築（プレハブレス）。
 - **ビルド**: WebGL (圧縮なし、RunInBackground有効)。サーバーを起動するバッチも作成
+
+## 6.実装するクラス
+
+1. Suit (Enum)
+2. Card (Class)
+3. RuleManager (Class - ロジックの中核)
+
+テストするクラス:
+1. RuleManagerTests
