@@ -6,6 +6,7 @@ using System.IO;
 
 public class WebBuild
 {
+    [MenuItem("Build/Build WebGL")]
     public static void Build()
     {
         string buildPath = "Builds/WebGL";
@@ -25,6 +26,12 @@ public class WebBuild
                 scenes.Add(scene.path);
             }
         }
+
+        // Configure Player Settings for WebGL
+        PlayerSettings.runInBackground = true;
+        PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
+        PlayerSettings.defaultWebScreenWidth = 540;
+        PlayerSettings.defaultWebScreenHeight = 960;
 
         // Build Player
         BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
