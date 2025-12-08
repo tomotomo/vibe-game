@@ -29,8 +29,7 @@ namespace Daifugo
             diceText = textObj.AddComponent<Text>();
             
             // Safe Font Loading (Inline for now or use helper if accessible)
-            Font f = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            if (f == null) f = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            Font f = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (f == null) {
                 var all = Resources.FindObjectsOfTypeAll<Font>();
                 if (all.Length > 0) f = all[0];

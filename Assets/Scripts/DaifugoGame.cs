@@ -586,14 +586,14 @@ namespace Daifugo
             // Explicitly set size
             RectTransform cardRt = cardObj.GetComponent<RectTransform>();
             if (cardRt == null) cardRt = cardObj.AddComponent<RectTransform>();
-            cardRt.sizeDelta = new Vector2(70, 100);
+            cardRt.sizeDelta = new Vector2(100, 140); // Larger for mobile
 
             // Layout
             LayoutElement le = cardObj.AddComponent<LayoutElement>();
-            le.preferredWidth = 70; // Set preferred size
-            le.preferredHeight = 100;
-            le.minWidth = 70;
-            le.minHeight = 100;
+            le.preferredWidth = 100; // Larger for mobile
+            le.preferredHeight = 140; // Larger for mobile
+            le.minWidth = 100; // Larger for mobile
+            le.minHeight = 140; // Larger for mobile
 
             // Text
             GameObject textObj = new GameObject("Text");
@@ -636,18 +636,15 @@ namespace Daifugo
             t.font = GetDefaultFont();
             t.raycastTarget = false;
             t.color = Color.white;
-            t.fontSize = 20;
+            t.fontSize = 36; // Increased for mobile
             LayoutElement le = textObj.AddComponent<LayoutElement>();
-            le.minHeight = 30;
+            le.minHeight = 50; // Increased for mobile
         }
 
         // --- Helper ---
         Font GetDefaultFont()
         {
-            Font f = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            if (f != null) return f;
-            
-            f = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            Font f = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (f != null) return f;
             
             var allFonts = Resources.FindObjectsOfTypeAll<Font>();
@@ -687,7 +684,7 @@ namespace Daifugo
             statsObj.transform.SetParent(canvasObj.transform); // Attach to Canvas directly to be on top/independent
             statsText = statsObj.AddComponent<Text>();
             statsText.font = GetDefaultFont();
-            statsText.fontSize = 18;
+            statsText.fontSize = 28; // Increased for mobile
             statsText.color = Color.white;
             statsText.alignment = TextAnchor.UpperLeft;
             statsText.raycastTarget = false;
@@ -707,9 +704,9 @@ namespace Daifugo
             mainPanel.SetActive(false); // Hide initially
             VerticalLayoutGroup vlg = mainPanel.AddComponent<VerticalLayoutGroup>();
             vlg.childControlHeight = false;
-            vlg.childForceExpandHeight = false;
+            vlg.childForceExpandHeight = true; // Changed to true
             vlg.spacing = 20;
-            vlg.padding = new RectOffset(20, 20, 20, 20);
+            vlg.padding = new RectOffset(20, 20, 80, 20); // Increased top padding to avoid StatsText overlap
             RectTransform mainRt = mainPanel.GetComponent<RectTransform>();
             mainRt.anchorMin = Vector2.zero;
             mainRt.anchorMax = Vector2.one;
@@ -736,7 +733,7 @@ namespace Daifugo
             Text titleText = titleTextObj.AddComponent<Text>();
             titleText.text = "DAIFUGO";
             titleText.font = GetDefaultFont();
-            titleText.fontSize = 60;
+            titleText.fontSize = 80; // Increased for mobile
             titleText.alignment = TextAnchor.MiddleCenter;
             titleText.color = Color.yellow;
             LayoutElement titleLe = titleTextObj.AddComponent<LayoutElement>();
@@ -759,7 +756,7 @@ namespace Daifugo
             startTxt.font = GetDefaultFont();
             startTxt.color = Color.black;
             startTxt.alignment = TextAnchor.MiddleCenter;
-            startTxt.fontSize = 24;
+            startTxt.fontSize = 40; // Increased for mobile
             startTxt.raycastTarget = false;
             RectTransform startTxtRt = startTxtObj.GetComponent<RectTransform>();
             startTxtRt.anchorMin = Vector2.zero;
@@ -784,7 +781,7 @@ namespace Daifugo
             rulesTxt.font = GetDefaultFont();
             rulesTxt.color = Color.black;
             rulesTxt.alignment = TextAnchor.MiddleCenter;
-            rulesTxt.fontSize = 24;
+            rulesTxt.fontSize = 40; // Increased for mobile
             rulesTxt.raycastTarget = false;
             RectTransform rulesTxtRt = rulesTxtObj.GetComponent<RectTransform>();
             rulesTxtRt.anchorMin = Vector2.zero;
@@ -813,7 +810,7 @@ namespace Daifugo
             rulesContentObj.transform.SetParent(rulesPanel.transform);
             Text rulesContent = rulesContentObj.AddComponent<Text>();
             rulesContent.font = GetDefaultFont();
-            rulesContent.fontSize = 20;
+            rulesContent.fontSize = 32; // Increased for mobile
             rulesContent.color = Color.white;
             rulesContent.text = "--- RULES ---\n\n" +
                                 "8 CUT: Clears the field.\n" +
@@ -841,6 +838,7 @@ namespace Daifugo
             closeTxt.font = GetDefaultFont();
             closeTxt.color = Color.white;
             closeTxt.alignment = TextAnchor.MiddleCenter;
+            closeTxt.fontSize = 40; // Increased for mobile
             closeTxt.raycastTarget = false;
             RectTransform closeTxtRt = closeTxtObj.GetComponent<RectTransform>();
             closeTxtRt.anchorMin = Vector2.zero;
@@ -858,6 +856,9 @@ namespace Daifugo
             cpuHlg.childControlHeight = false; 
             cpuHlg.childForceExpandHeight = false; 
             cpuArea = cpuObj.transform;
+            LayoutElement cpuLe = cpuObj.AddComponent<LayoutElement>();
+            cpuLe.minHeight = 50;
+            cpuLe.flexibleHeight = 0.5f; // Added for vertical distribution
 
             GameObject fieldObj = new GameObject("Field Area");
             fieldObj.transform.SetParent(mainPanel.transform);
@@ -871,6 +872,7 @@ namespace Daifugo
             fieldArea = fieldObj.transform;
             LayoutElement fieldLe = fieldObj.AddComponent<LayoutElement>();
             fieldLe.minHeight = 100;
+            fieldLe.flexibleHeight = 1f; // Added for vertical distribution
 
             GameObject statusObj = new GameObject("Status");
             statusObj.transform.SetParent(mainPanel.transform);
@@ -881,6 +883,9 @@ namespace Daifugo
             statusText.color = Color.yellow;
             statusText.text = "Initializing...";
             statusText.raycastTarget = false;
+            LayoutElement statusLe = statusObj.AddComponent<LayoutElement>(); // Added
+            statusLe.minHeight = 50; // Ensure some height
+            statusLe.flexibleHeight = 0.5f; // Added for vertical distribution
             
             GameObject playerObj = new GameObject("Player Area");
             playerObj.transform.SetParent(mainPanel.transform);
@@ -894,12 +899,16 @@ namespace Daifugo
             playerArea = playerObj.transform;
             LayoutElement playerLe = playerObj.AddComponent<LayoutElement>();
             playerLe.minHeight = 100;
+            playerLe.flexibleHeight = 1f; // Added for vertical distribution
 
             GameObject btnObj = new GameObject("Buttons");
             btnObj.transform.SetParent(mainPanel.transform);
             HorizontalLayoutGroup btnHlg = btnObj.AddComponent<HorizontalLayoutGroup>();
             btnHlg.childAlignment = TextAnchor.MiddleCenter;
             btnHlg.spacing = 20;
+            LayoutElement btnLe = btnObj.AddComponent<LayoutElement>(); // Added
+            btnLe.minHeight = 80; // Ensure height for buttons
+            btnLe.flexibleHeight = 0.5f; // Added for vertical distribution
 
             // Pass Button
             GameObject passBtnObj = new GameObject("PassButton");
@@ -909,8 +918,8 @@ namespace Daifugo
             passButton = passBtnObj.AddComponent<Button>();
             passButton.onClick.AddListener(OnPass);
             LayoutElement passLe = passBtnObj.AddComponent<LayoutElement>();
-            passLe.minWidth = 100;
-            passLe.minHeight = 40;
+            passLe.minWidth = 160; // Increased for mobile
+            passLe.minHeight = 60; // Increased for mobile
             GameObject passTxtObj = new GameObject("Text");
             passTxtObj.transform.SetParent(passBtnObj.transform);
             Text passTxt = passTxtObj.AddComponent<Text>();
@@ -918,6 +927,7 @@ namespace Daifugo
             passTxt.font = GetDefaultFont();
             passTxt.color = Color.black;
             passTxt.alignment = TextAnchor.MiddleCenter;
+            passTxt.fontSize = 40; // Increased for mobile
             passTxt.raycastTarget = false;
             RectTransform passTxtRt = passTxtObj.GetComponent<RectTransform>();
             passTxtRt.anchorMin = Vector2.zero;
@@ -933,8 +943,8 @@ namespace Daifugo
             playButton = playBtnObj.AddComponent<Button>();
             playButton.onClick.AddListener(OnPlayButtonPressed);
             LayoutElement playLe = playBtnObj.AddComponent<LayoutElement>();
-            playLe.minWidth = 100;
-            playLe.minHeight = 40;
+            playLe.minWidth = 160; // Increased for mobile
+            playLe.minHeight = 60; // Increased for mobile
             GameObject playTxtObj = new GameObject("Text");
             playTxtObj.transform.SetParent(playBtnObj.transform);
             Text playTxt = playTxtObj.AddComponent<Text>();
@@ -942,6 +952,7 @@ namespace Daifugo
             playTxt.font = GetDefaultFont();
             playTxt.color = Color.black;
             playTxt.alignment = TextAnchor.MiddleCenter;
+            playTxt.fontSize = 40; // Increased for mobile
             playTxt.raycastTarget = false;
             RectTransform playTxtRt = playTxtObj.GetComponent<RectTransform>();
             playTxtRt.anchorMin = Vector2.zero;
@@ -965,7 +976,7 @@ namespace Daifugo
             retryTxt.font = GetDefaultFont();
             retryTxt.color = Color.black;
             retryTxt.alignment = TextAnchor.MiddleCenter;
-            retryTxt.fontSize = 24;
+            retryTxt.fontSize = 40; // Increased for mobile
             retryTxt.raycastTarget = false;
             RectTransform retryTxtRt = retryTxtObj.GetComponent<RectTransform>();
             retryTxtRt.anchorMin = Vector2.zero;
