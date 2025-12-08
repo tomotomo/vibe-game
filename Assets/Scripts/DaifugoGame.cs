@@ -50,6 +50,33 @@ namespace Daifugo
             // StartCoroutine(GameSequence()); // Wait for Start Button
         }
 
+        void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                TakeScreenshot();
+            }
+        }
+
+        void TakeScreenshot()
+        {
+            // Application.dataPath points to 'Assets'. Parent is project root.
+            string projectRoot = System.IO.Directory.GetParent(Application.dataPath).FullName;
+            string folderPath = System.IO.Path.Combine(projectRoot, "screenshot");
+
+            if (!System.IO.Directory.Exists(folderPath))
+            {
+                System.IO.Directory.CreateDirectory(folderPath);
+            }
+
+            string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            string fileName = $"screenshot_{sceneName}.png";
+            string fullPath = System.IO.Path.Combine(folderPath, fileName);
+
+            ScreenCapture.CaptureScreenshot(fullPath);
+            Debug.Log($"Screenshot saved to: {fullPath}");
+        }
+
         public void OnStartGamePressed()
         {
             titlePanel.SetActive(false);
