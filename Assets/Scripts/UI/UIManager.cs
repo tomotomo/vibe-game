@@ -29,13 +29,13 @@ namespace Daifugo.UI
         [SerializeField] public Button PlayButton;
         [SerializeField] public Button PassButton;
         [SerializeField] public Button RetryButton;
-        [SerializeField] public Button QuitButton;
+        [SerializeField] public Button ExitButton;
         
         [Header("Title/Rule Buttons")]
         [SerializeField] public Button StartGameButton;
         [SerializeField] public Button ToRuleButton;
         [SerializeField] public Button ToTitleButtonFromRule;
-        [SerializeField] public Button ToTitleButtonFromGame; // Quit button in game
+        [SerializeField] public Button ToTitleButtonFromGame; // Exit button in game
 
         [Header("Prefabs")]
         [SerializeField] private CardView _cardPrefab;
@@ -84,7 +84,7 @@ namespace Daifugo.UI
             if (PlayButton) PlayButton.onClick.AddListener(() => OnPlayClicked?.Invoke());
             if (PassButton) PassButton.onClick.AddListener(() => OnPassClicked?.Invoke());
             if (RetryButton) RetryButton.onClick.AddListener(() => OnRetryClicked?.Invoke());
-            if (QuitButton) QuitButton.onClick.AddListener(() => OnToTitleClicked?.Invoke());
+            if (ExitButton) ExitButton.onClick.AddListener(() => OnToTitleClicked?.Invoke());
         }
 
         // --- State Management ---
@@ -109,6 +109,9 @@ namespace Daifugo.UI
             RulePanel.SetActive(false);
             GamePanel.SetActive(true);
             ResultPanel.SetActive(false);
+            
+            // Reset buttons
+            ToggleButtons(false, false, false, true);
         }
 
         public void ShowResult(bool playerWin, string stats)
@@ -118,6 +121,14 @@ namespace Daifugo.UI
             
             if (ResultText) ResultText.text = playerWin ? "YOU WIN!" : "CPU WINS";
             if (StatsText) StatsText.text = stats;
+        }
+        
+        public void ToggleButtons(bool play, bool pass, bool retry, bool exit)
+        {
+            if (PlayButton) PlayButton.gameObject.SetActive(play);
+            if (PassButton) PassButton.gameObject.SetActive(pass);
+            if (RetryButton) RetryButton.gameObject.SetActive(retry);
+            if (ExitButton) ExitButton.gameObject.SetActive(exit);
         }
 
         // --- Game View Updates ---
@@ -186,9 +197,26 @@ namespace Daifugo.UI
         }
         
         // --- Dice Animation Helper ---
-        public void ShowDiceResult(int result)
+        // Using MessageText or specialized Dice Texts?
+        // Let's use MessageText for combined result or add dedicated Dice texts.
+        // Spec says: "画面中央に、左右２個のサイコロを並べてアニメーションする"
+        // Let's expect GameController to manage the text content or provide 2 ints.
+        // We need 2 text fields for visual.
+        [SerializeField] public Text Dice1Text;
+        [SerializeField] public Text Dice2Text;
+
+        public void UpdateDice(int d1, int d2, bool visible)
         {
-            if (DiceResultText) DiceResultText.text = $"Dice: {result}";
+            if (Dice1Text)
+            {
+                Dice1Text.gameObject.SetActive(visible);
+                Dice1Text.text = d1.ToString();
+            }
+            if (Dice2Text)
+            {
+                Dice2Text.gameObject.SetActive(visible);
+                Dice2Text.text = d2.ToString();
+            }
         }
     }
 }

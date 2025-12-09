@@ -59,7 +59,7 @@ namespace Daifugo.Editor
             soGame.ApplyModifiedProperties();
 
             // 6. Build UI Hierarchy
-            var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            var font = Resources.GetBuiltinResource<Font>("Arial.ttf");
 
             // --- Title Panel ---
             var titlePanel = CreatePanel(canvasObj.transform, "TitlePanel", Color.black);
@@ -93,9 +93,14 @@ namespace Daifugo.Editor
             fieldLayout.spacing = 10;
 
             // Info Texts
-            var msgText = CreateText(gamePanel.transform, "MessageText", "Game Start", font, 30, new Vector2(0, 0));
-            var cpuInfoText = CreateText(gamePanel.transform, "CpuInfoText", "CPU: 0", font, 24, new Vector2(0, 250));
-            var diceText = CreateText(gamePanel.transform, "DiceText", "", font, 40, new Vector2(0, 50));
+            var msgText = CreateText(gamePanel.transform, "MessageText", "Game Start", font, 30, new Vector2(0, 150));
+            var cpuInfoText = CreateText(gamePanel.transform, "CpuInfoText", "CPU: 0", font, 24, new Vector2(0, 300));
+            
+            // Dice Texts (Center)
+            var dice1 = CreateText(gamePanel.transform, "Dice1Text", "1", font, 50, new Vector2(-50, 50));
+            var dice2 = CreateText(gamePanel.transform, "Dice2Text", "1", font, 50, new Vector2(50, 50));
+            dice1.SetActive(false);
+            dice2.SetActive(false);
 
             // Bottom: Player Hand (Grid/Horizontal)
             var playerArea = CreateContainer(gamePanel.transform, "PlayerArea", new Vector2(0, -200), new Vector2(500, 250));
@@ -111,7 +116,7 @@ namespace Daifugo.Editor
             
             var playBtn = CreateButton(btnArea.transform, "PlayButton", "PLAY", font, Vector2.zero);
             var passBtn = CreateButton(btnArea.transform, "PassButton", "PASS", font, Vector2.zero);
-            var quitBtn = CreateButton(btnArea.transform, "QuitButton", "QUIT", font, Vector2.zero);
+            var exitBtn = CreateButton(btnArea.transform, "ExitButton", "EXIT", font, Vector2.zero);
 
             // --- Result Panel ---
             var resultPanel = CreatePanel(canvasObj.transform, "ResultPanel", new Color(0,0,0,0.8f));
@@ -140,13 +145,14 @@ namespace Daifugo.Editor
             soUI.FindProperty("CpuInfoText").objectReferenceValue = cpuInfoText.GetComponent<Text>();
             soUI.FindProperty("ResultText").objectReferenceValue = resText.GetComponent<Text>();
             soUI.FindProperty("StatsText").objectReferenceValue = statsText.GetComponent<Text>();
-            soUI.FindProperty("DiceResultText").objectReferenceValue = diceText.GetComponent<Text>();
+            soUI.FindProperty("Dice1Text").objectReferenceValue = dice1.GetComponent<Text>();
+            soUI.FindProperty("Dice2Text").objectReferenceValue = dice2.GetComponent<Text>();
 
             // Buttons
             soUI.FindProperty("PlayButton").objectReferenceValue = playBtn.GetComponent<Button>();
             soUI.FindProperty("PassButton").objectReferenceValue = passBtn.GetComponent<Button>();
             soUI.FindProperty("RetryButton").objectReferenceValue = retryBtn.GetComponent<Button>();
-            soUI.FindProperty("QuitButton").objectReferenceValue = quitBtn.GetComponent<Button>();
+            soUI.FindProperty("ExitButton").objectReferenceValue = exitBtn.GetComponent<Button>();
             soUI.FindProperty("StartGameButton").objectReferenceValue = startBtn.GetComponent<Button>();
             soUI.FindProperty("ToRuleButton").objectReferenceValue = toRuleBtn.GetComponent<Button>();
             soUI.FindProperty("ToTitleButtonFromRule").objectReferenceValue = ruleBackBtn.GetComponent<Button>();
