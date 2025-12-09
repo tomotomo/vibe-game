@@ -59,7 +59,7 @@ namespace Daifugo.Editor
             soGame.ApplyModifiedProperties();
 
             // 6. Build UI Hierarchy
-            var font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            var font = Resources.Load<Font>("Fonts/RobotoMono-Regular");
 
             // --- Title Panel ---
             var titlePanel = CreatePanel(canvasObj.transform, "TitlePanel", Color.black);
