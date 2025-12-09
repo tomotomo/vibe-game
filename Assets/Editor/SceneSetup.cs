@@ -124,7 +124,7 @@ namespace Daifugo.Editor
             var resText = CreateText(resultPanel.transform, "ResultText", "WIN!", font, 60, new Vector2(0, 200));
             var statsText = CreateText(resultPanel.transform, "StatsText", "Stats...", font, 30, Vector2.zero);
             var retryBtn = CreateButton(resultPanel.transform, "RetryButton", "RETRY", font, new Vector2(0, -200));
-            var resQuitBtn = CreateButton(resultPanel.transform, "ResQuitButton", "TITLE", font, new Vector2(0, -300));
+            var resQuitBtn = CreateButton(resultPanel.transform, "ResQuitButton", "EXIT", font, new Vector2(0, -300));
 
             // 7. Link UI Manager References
             var soUI = new SerializedObject(uiManager);

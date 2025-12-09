@@ -398,14 +398,13 @@ namespace Daifugo.Game
                     float winRate = (float)wins / games * 100f;
                     string stats = $"Games: {games}\nWins: {wins}\nWin Rate: {winRate:F1}%\nStreak: {streak}\nMax Streak: {maxStreak}";
         
-                    _uiManager.ShowResult(playerWin, stats);
-                    // Result panel has its own buttons managed by UIManager's ShowResult (mostly static on panel)
-                    // But we can ensure game buttons are hidden
-                    _uiManager.ToggleButtons(false, false, false, false);
-                }
-        
-                private void QuitGame()
-                {
+                                _uiManager.ShowResult(playerWin, stats);
+                                // Result panel has its own buttons managed by UIManager's ShowResult (mostly static on panel)
+                                // But we need to ensure Retry button is active (as ToggleButtons controls it)
+                                _uiManager.ToggleButtons(false, false, true, false);
+                            }
+                    
+                            private void QuitGame()                {
                     _gameActive = false;
                     StopAllCoroutines();
                     _uiManager.ShowTitle();
