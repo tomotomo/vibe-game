@@ -179,29 +179,79 @@ namespace Daifugo.Game
                     }
                 }
         
-                private void OnPlayerCardClicked(Card card)
-                {
-                    if (!_isPlayerTurn) return;
-        
-                    if (_selectedCards.Contains(card))
-                    {
-                        _selectedCards.Remove(card);
-                    }
-                    else
-                    {
-                        _selectedCards.Add(card);
-                    }
-                    
-                    // Smart Play Check (if enabled/implemented)
-                    // Spec: "手札をタップすると、出せるカードであれば自動的に選択・決定して即座に出す" when following?
-                    // "スマートプレイ: 場にカードが出ている（Follow）状態で、手札をタップすると..."
-                    // Let's implement manual select then Play button first, Smart Play is UX enhancement.
-                    // But spec says "手札をタップして選択/解除 -> PLAYボタン" AND "Smart Play"
-                    // For now, let's just toggle selection.
-                    
-                    _uiManager.UpdatePlayerHand(_playerHand, _selectedCards);
-                }
-        
+                        private void OnPlayerCardClicked(Card card)
+                        {
+                            if (!_isPlayerTurn) return;
+                
+                            // --- Smart Play Logic ---
+                            // Only active when following (field has cards)
+                            if (_fieldCards != null && _fieldCards.Count > 0)
+                            {
+                                int requiredCount = _fieldCards.Count;
+                                
+                                // Find all cards of same rank in hand
+                                var sameRankCards = _playerHand.Where(c => c.Rank == card.Rank).ToList();
+                                
+                                // If we don't have enough cards of this rank, we can't play them anyway
+                                if (sameRankCards.Count >= requiredCount)
+                                {
+                                    List<Card> cardsToPlay = null;
+                
+                                    if (sameRankCards.Count == requiredCount)
+                                    {
+                                        // Case 1: Exact number of cards available. No ambiguity.
+                                        cardsToPlay = sameRankCards;
+                                    }
+                                    else // sameRankCards.Count > requiredCount
+                                    {
+                                        // Case 2: More cards than needed. Ambiguous unless constrained by Suit Binding.
+                                        if (_ruleManager.IsSuitBound)
+                                        {
+                                            // Filter by bound suits
+                                            // The field cards have specific suits. We must match them.
+                                            // Simplified binding check: The suits must match the field's suits exactly if we are to play.
+                                            // Note: RuleManager checks "DoSuitsMatch".
+                                            
+                                            // Find subset that matches field suits?
+                                            // Actually, if IsSuitBound is true, RuleManager expects the played cards to have SAME suits as previous field.
+                                            // So we look for cards in hand that have the required suits.
+                                            
+                                            var fieldSuits = _fieldCards.Select(c => c.Suit).ToList();
+                                            var matchingCards = sameRankCards.Where(c => fieldSuits.Contains(c.Suit)).ToList();
+                                            
+                                            if (matchingCards.Count == requiredCount)
+                                            {
+                                                // Verify if suits match exactly (just in case of duplicate suits logic which shouldn't happen in single deck)
+                                                cardsToPlay = matchingCards;
+                                            }
+                                        }
+                                    }
+                
+                                    // If we identified a unique candidate set, validate and play
+                                    if (cardsToPlay != null)
+                                    {
+                                        if (_ruleManager.CanPlayCards(cardsToPlay, _fieldCards))
+                                        {
+                                            PlayCards(_playerHand, cardsToPlay, true);
+                                            _selectedCards.Clear();
+                                            return; // Skip normal toggle
+                                        }
+                                    }
+                                }
+                            }
+                            // ------------------------
+                
+                            if (_selectedCards.Contains(card))
+                            {
+                                _selectedCards.Remove(card);
+                            }
+                            else
+                            {
+                                _selectedCards.Add(card);
+                            }
+                            
+                            _uiManager.UpdatePlayerHand(_playerHand, _selectedCards);
+                        }        
                 private void PlayerTryPlay()
                 {
                     if (!_isPlayerTurn) return;
