@@ -10,7 +10,7 @@ namespace Daifugo.Editor
 {
     public class SceneSetup
     {
-        [MenuItem("Daifugo/Setup Scene")]
+        [MenuItem("Duel Daifugo/Setup Scene")]
         public static void Setup()
         {
             // Create new scene
