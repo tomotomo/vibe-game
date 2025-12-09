@@ -63,7 +63,25 @@ namespace Daifugo.Editor
 
             // --- Title Panel ---
             var titlePanel = CreatePanel(canvasObj.transform, "TitlePanel", Color.black);
-            var titleText = CreateText(titlePanel.transform, "TitleText", "DAIFUGO", font, 60, new Vector2(0, 200));
+            
+            // Title Logo (RawImage)
+            var logoTex = Resources.Load<Texture2D>("logo");
+            if (logoTex != null)
+            {
+                var logoObj = new GameObject("TitleLogo");
+                logoObj.transform.SetParent(titlePanel.transform, false);
+                var logoRect = logoObj.AddComponent<RectTransform>();
+                logoRect.anchoredPosition = new Vector2(0, 200);
+                logoRect.sizeDelta = new Vector2(500, 250); // Adjust size as needed
+                var rawImg = logoObj.AddComponent<RawImage>();
+                rawImg.texture = logoTex;
+            }
+            else
+            {
+                // Fallback text if logo missing
+                CreateText(titlePanel.transform, "TitleText", "DUEL DAIFUGO", font, 60, new Vector2(0, 200)).GetComponent<RectTransform>().sizeDelta = new Vector2(600, 100);
+            }
+
             var startBtn = CreateButton(titlePanel.transform, "StartButton", "START GAME", font, new Vector2(0, 0));
             var toRuleBtn = CreateButton(titlePanel.transform, "RuleButton", "RULES", font, new Vector2(0, -100));
             
