@@ -6,6 +6,7 @@ using System.IO;
 
 public class WebBuild
 {
+    [MenuItem("Build/Build WebGL")]
     public static void Build()
     {
         string buildPath = "Builds/WebGL";
@@ -16,19 +17,18 @@ public class WebBuild
             Directory.CreateDirectory(buildPath);
         }
 
-        // Get enabled scenes
-        List<string> scenes = new List<string>();
-        foreach (EditorBuildSettingsScene scene in EditorBuildSettings.scenes)
-        {
-            if (scene.enabled)
-            {
-                scenes.Add(scene.path);
-            }
-        }
+        // Explicitly set the MainScene for this project
+        string[] scenes = { "Assets/Scenes/MainScene.unity" };
+
+        // Configure Player Settings for WebGL
+        PlayerSettings.runInBackground = true;
+        PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
+        PlayerSettings.defaultWebScreenWidth = 540;
+        PlayerSettings.defaultWebScreenHeight = 960;
 
         // Build Player
         BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
-        buildPlayerOptions.scenes = scenes.ToArray();
+        buildPlayerOptions.scenes = scenes;
         buildPlayerOptions.locationPathName = buildPath;
         buildPlayerOptions.target = BuildTarget.WebGL;
         buildPlayerOptions.options = BuildOptions.None;
