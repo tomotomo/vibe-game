@@ -1,10 +1,12 @@
 {
     "name": "Daifugo.Tests",
-    "rootNamespace": "",
+    "rootNamespace": "Daifugo.Tests",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "Daifugo.Core"
+        "Daifugo.Core",
+        "Daifugo.UI",
+        "Daifugo.Game"
     ],
     "includePlatforms": [
         "Editor"

@@ -1,6 +1,6 @@
 {
     "name": "Daifugo.Core",
-    "rootNamespace": "Daifugo",
+    "rootNamespace": "Daifugo.Core",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

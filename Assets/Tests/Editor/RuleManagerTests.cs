@@ -1,0 +1,134 @@
+using System.Collections.Generic;
+using NUnit.Framework;
+using Daifugo.Core;
+
+namespace Daifugo.Tests
+{
+    public class RuleManagerTests
+    {
+        private RuleManager _ruleManager;
+
+        [SetUp]
+        public void Setup()
+        {
+            _ruleManager = new RuleManager();
+        }
+
+        [Test]
+        public void CardStrength_Normal()
+        {
+            var weak = new Card(Suit.Spades, 3);
+            var strong = new Card(Suit.Spades, 2);
+            
+            Assert.Less(weak.GetStrength(), strong.GetStrength());
+        }
+
+        [Test]
+        public void CanPlayCards_Normal_StrongerWins()
+        {
+            var fieldCards = new List<Card> { new Card(Suit.Clubs, 3) };
+            var handCards = new List<Card> { new Card(Suit.Clubs, 4) };
+
+            Assert.IsTrue(_ruleManager.CanPlayCards(handCards, fieldCards));
+        }
+
+        [Test]
+        public void CanPlayCards_Normal_WeakerFails()
+        {
+            var fieldCards = new List<Card> { new Card(Suit.Clubs, 4) };
+            var handCards = new List<Card> { new Card(Suit.Clubs, 3) };
+
+            Assert.IsFalse(_ruleManager.CanPlayCards(handCards, fieldCards));
+        }
+
+        [Test]
+        public void CanPlayCards_Revolution_WeakerWins()
+        {
+            // Trigger revolution manually or simulate it? 
+            // Since IsRevolution is private set, we can trigger it via CommitPlay with 4 cards or J
+            // Or use reflection? For now, let's use CommitPlay to trigger revolution with 4 cards first.
+            
+            var fourCards = new List<Card> { 
+                new Card(Suit.Spades, 3), new Card(Suit.Hearts, 3), 
+                new Card(Suit.Diamonds, 3), new Card(Suit.Clubs, 3) 
+            };
+            _ruleManager.CommitPlay(fourCards, null);
+
+            Assert.IsTrue(_ruleManager.IsRevolution);
+
+            var fieldCards = new List<Card> { new Card(Suit.Clubs, 4) };
+            var handCards = new List<Card> { new Card(Suit.Clubs, 3) };
+
+            // In revolution, 3 is stronger than 4
+            Assert.IsTrue(_ruleManager.CanPlayCards(handCards, fieldCards));
+        }
+
+        [Test]
+        public void CommitPlay_EightCut()
+        {
+            var played = new List<Card> { new Card(Suit.Spades, 8) };
+            var result = _ruleManager.CommitPlay(played, null);
+
+            Assert.IsTrue(result.HasFlag(GameEvent.EightCut));
+        }
+
+        [Test]
+        public void CommitPlay_FiveSkip()
+        {
+            var played = new List<Card> { new Card(Suit.Spades, 5) };
+            var result = _ruleManager.CommitPlay(played, null);
+
+            Assert.IsTrue(result.HasFlag(GameEvent.FiveSkip));
+        }
+
+        [Test]
+        public void CommitPlay_JBack_TogglesRevolution()
+        {
+            Assert.IsFalse(_ruleManager.IsRevolution);
+
+            var played = new List<Card> { new Card(Suit.Spades, 11) }; // Jack
+            var result = _ruleManager.CommitPlay(played, null);
+
+            Assert.IsTrue(result.HasFlag(GameEvent.JBack));
+            Assert.IsTrue(_ruleManager.IsRevolution);
+            
+            // Toggle back
+            _ruleManager.CommitPlay(played, null);
+            Assert.IsFalse(_ruleManager.IsRevolution);
+        }
+
+        [Test]
+        public void SuitBinding_Activates()
+        {
+            var field = new List<Card> { new Card(Suit.Spades, 3) };
+            var played = new List<Card> { new Card(Suit.Spades, 4) };
+
+            var result = _ruleManager.CommitPlay(played, field);
+            
+            Assert.IsTrue(result.HasFlag(GameEvent.SuitBind));
+            Assert.IsTrue(_ruleManager.IsSuitBound);
+        }
+        
+        [Test]
+        public void SuitBinding_RestrictsPlay()
+        {
+            // Activate binding
+            var initialField = new List<Card> { new Card(Suit.Spades, 3) };
+            var play1 = new List<Card> { new Card(Suit.Spades, 4) };
+            _ruleManager.CommitPlay(play1, initialField);
+            
+            Assert.IsTrue(_ruleManager.IsSuitBound);
+
+            // Try to play non-matching suit (Hearts) against Spades
+            var fieldNow = play1;
+            var playHearts = new List<Card> { new Card(Suit.Hearts, 5) };
+            
+            // Rank 5 > 4, so normally ok, but suit bound to Spades
+            Assert.IsFalse(_ruleManager.CanPlayCards(playHearts, fieldNow));
+
+            // Try to play matching suit (Spades)
+            var playSpades = new List<Card> { new Card(Suit.Spades, 6) };
+            Assert.IsTrue(_ruleManager.CanPlayCards(playSpades, fieldNow));
+        }
+    }
+}
