@@ -71,9 +71,80 @@ namespace Daifugo.Editor
             var rulePanel = CreatePanel(canvasObj.transform, "RulePanel", new Color(0,0,0,0.9f));
             rulePanel.SetActive(false);
             CreateText(rulePanel.transform, "RuleTitle", "RULES", font, 40, new Vector2(0, 350));
-            CreateText(rulePanel.transform, "RuleBody", 
-                "1 vs 1 Daifugo\n\n- 8 Cut\n- 5 Skip\n- J Back\n- Suit Bind\n\nWin by emptying your hand.", 
-                font, 24, Vector2.zero).GetComponent<RectTransform>().sizeDelta = new Vector2(400, 600);
+            
+            // Scroll View for Rules
+            var svObj = new GameObject("RuleScrollView");
+            svObj.transform.SetParent(rulePanel.transform, false);
+            var svRect = svObj.AddComponent<RectTransform>();
+            svRect.anchorMin = new Vector2(0.1f, 0.2f); // 10% from left, 20% from bottom
+            svRect.anchorMax = new Vector2(0.9f, 0.8f); // 90% from left, 80% from bottom (below title)
+            svRect.offsetMin = Vector2.zero;
+            svRect.offsetMax = Vector2.zero;
+            
+            var sv = svObj.AddComponent<ScrollRect>();
+            sv.horizontal = false;
+            sv.vertical = true;
+            sv.scrollSensitivity = 20;
+            
+            // Viewport
+            var vpObj = new GameObject("Viewport");
+            vpObj.transform.SetParent(svObj.transform, false);
+            var vpRect = vpObj.AddComponent<RectTransform>();
+            vpRect.anchorMin = Vector2.zero;
+            vpRect.anchorMax = Vector2.one;
+            vpRect.sizeDelta = Vector2.zero;
+            vpObj.AddComponent<RectMask2D>();
+            var vpImg = vpObj.AddComponent<Image>();
+            vpImg.color = new Color(1,1,1,0.1f);
+            
+            sv.viewport = vpRect;
+
+            // Rule Text (Acts as Content)
+            string ruleText = 
+                "<b>BASIC RULES</b>\n\n" +
+                "- <b>Goal:</b> Empty your hand first.\n" +
+                "- <b>Deal:</b> Based on dice sum (2-12).\n" +
+                "- <b>Rank:</b> 3 < 4 ... < K < A < 2\n" +
+                "- <b>Play:</b> Stronger cards, same qty.\n" +
+                "- <b>Pass:</b> Wait until field clears.\n\n" +
+                
+                "<b>SPECIAL RULES</b>\n\n" +
+                "<b>[8 Cut]</b>\n" +
+                "Play 8 -> Field clears, your turn.\n\n" +
+                
+                "<b>[5 Skip]</b>\n" +
+                "Play 5 -> Skip opponent, play again.\n\n" +
+                
+                "<b>[J Back]</b>\n" +
+                "Play J -> Temp Revolution (3>2).\n" +
+                "Ends when field clears.\n\n" +
+                
+                "<b>[Suit Bind]</b>\n" +
+                "Match suit -> Suit locked until clear.\n\n" +
+                
+                "<b>[Revolution]</b>\n" +
+                "Play 4+ cards -> Strength reverses.\n" +
+                "(3 is strongest)";
+
+            var txtObj = CreateText(vpObj.transform, "RuleBody", ruleText, font, 24, Vector2.zero);
+            var txt = txtObj.GetComponent<Text>();
+            txt.alignment = TextAnchor.UpperLeft;
+            txt.horizontalOverflow = HorizontalWrapMode.Wrap;
+            txt.verticalOverflow = VerticalWrapMode.Overflow; 
+            
+            var txtRect = txtObj.GetComponent<RectTransform>();
+            txtRect.anchorMin = new Vector2(0, 1);
+            txtRect.anchorMax = new Vector2(1, 1); // Top stretch
+            txtRect.pivot = new Vector2(0.5f, 1);
+            txtRect.sizeDelta = new Vector2(0, 0); // Width matches viewport
+            
+            // Add ContentSizeFitter to Text
+            var csf = txtObj.AddComponent<ContentSizeFitter>();
+            csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            
+            // Assign to ScrollRect
+            sv.content = txtRect;
+            
             var ruleBackBtn = CreateButton(rulePanel.transform, "BackButton", "BACK", font, new Vector2(0, -350));
 
             // --- Game Panel ---
