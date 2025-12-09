@@ -82,19 +82,22 @@ namespace Daifugo.Tests
         }
 
         [Test]
-        public void CommitPlay_JBack_TogglesRevolution()
+        public void CommitPlay_JBack_ActivatesTemporaryRevolution()
         {
             Assert.IsFalse(_ruleManager.IsRevolution);
+            Assert.IsFalse(_ruleManager.IsJBackActive);
 
             var played = new List<Card> { new Card(Suit.Spades, 11) }; // Jack
             var result = _ruleManager.CommitPlay(played, null);
 
             Assert.IsTrue(result.HasFlag(GameEvent.JBack));
-            Assert.IsTrue(_ruleManager.IsRevolution);
+            Assert.IsTrue(_ruleManager.IsJBackActive);
+            Assert.IsTrue(_ruleManager.IsEffectiveRevolution);
             
-            // Toggle back
-            _ruleManager.CommitPlay(played, null);
-            Assert.IsFalse(_ruleManager.IsRevolution);
+            // Field clear should reset it
+            _ruleManager.ResetField();
+            Assert.IsFalse(_ruleManager.IsJBackActive);
+            Assert.IsFalse(_ruleManager.IsEffectiveRevolution);
         }
 
         [Test]
