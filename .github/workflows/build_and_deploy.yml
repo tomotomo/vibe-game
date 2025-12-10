@@ -1,0 +1,68 @@
+name: Build and Deploy to GitHub Pages
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+  UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+  UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+
+permissions:
+  contents: write
+
+jobs:
+  buildAndDeploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Library
+        uses: actions/cache@v3
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Packages/packages-lock.json') }}
+          restore-keys: |
+            Library-
+
+      - name: Build WebGL
+        uses: game-ci/unity-builder@v4
+        with:
+          targetPlatform: WebGL
+          unityVersion: 2022.3.62f3
+          allowDirtyBuild: true
+          # Use existing Build method in WebBuild.cs via static call?
+          # GameCI usually builds via its own logic, but we can specify custom method.
+          # Our method is WebBuild.Build
+          buildMethod: WebBuild.Build
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: build/WebGL # GameCI outputs to 'build/WebGL' by default when targetPlatform is WebGL?
+          # Actually GameCI output path defaults to 'build/WebGL' if not specified.
+          # But our WebBuild.cs puts it in 'Builds/WebGL'.
+          # We need to tell GameCI where the build is, OR override output path.
+          # Let's adjust WebBuild.cs to accept output path from args or handle move.
+          # Or simpler: Just tell deploy action to look at 'Builds/WebGL'.
+          
+      - name: Fix paths for Deployment
+        # GameCI builder output might be different from our script. 
+        # Our script uses "Builds/WebGL".
+        # GameCI executes our method. Our method writes to "Builds/WebGL".
+        # So we should deploy from "Builds/WebGL".
+        run: ls -R Builds/WebGL
+        
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: Builds/WebGL
