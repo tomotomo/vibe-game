@@ -1,8 +1,8 @@
-# Daifugo (Millionaire) - One-on-One Card Game
+# Duel Daifugo
 
-[English](README.md) | [日本語](README_JP.md)
+[**Play Online**](https://tomotomo.github.io/vibe-game/) | [日本語 (Japanese)](./README_JP.md)
 
-A simple yet engaging 1vs1 implementation of the popular Japanese card game "Daifugo" (Millionaire), built with Unity and generated using Gemini CLI.
+A simple 1 vs 1 Daifugo (Tycoon) card game built with Unity for WebGL.
 
 ## Features
 

@@ -48,4 +48,58 @@ public class WebBuild
             throw new System.Exception("Build failed");
         }
     }
+
+    [MenuItem("Build/Build for GitHub Pages")]
+    public static void BuildAndDeploy()
+    {
+        // 1. Build
+        Build();
+
+        string sourceDir = "Builds/WebGL";
+        string targetDir = "docs";
+
+        // 2. Clear docs directory
+        if (Directory.Exists(targetDir))
+        {
+            Directory.Delete(targetDir, true);
+        }
+        Directory.CreateDirectory(targetDir);
+
+        // 3. Copy files
+        CopyDirectory(sourceDir, targetDir);
+
+        // 4. Create .nojekyll
+        File.Create(Path.Combine(targetDir, ".nojekyll")).Dispose();
+
+        Debug.Log($"Deployed WebGL build to {targetDir} for GitHub Pages.");
+
+        EditorUtility.DisplayDialog("Build & Deploy Complete",
+            "WebGL build deployed to 'docs/' successfully.\n\n" +
+            "Next Steps for Gemini CLI:\n" +
+            "Please return to the CLI and type:\n" +
+            "\"ビルド完了、コミットして\"", 
+            "OK");
+    }
+
+    private static void CopyDirectory(string sourceDir, string targetDir)
+    {
+        DirectoryInfo dir = new DirectoryInfo(sourceDir);
+        if (!dir.Exists)
+            throw new DirectoryNotFoundException($"Source directory not found: {dir.FullName}");
+
+        DirectoryInfo[] dirs = dir.GetDirectories();
+
+        foreach (FileInfo file in dir.GetFiles())
+        {
+            string targetFilePath = Path.Combine(targetDir, file.Name);
+            file.CopyTo(targetFilePath, true);
+        }
+
+        foreach (DirectoryInfo subDir in dirs)
+        {
+            string newTargetDir = Path.Combine(targetDir, subDir.Name);
+            Directory.CreateDirectory(newTargetDir);
+            CopyDirectory(subDir.FullName, newTargetDir);
+        }
+    }
 }

@@ -1,6 +1,6 @@
-# Ubiquitous Language (Daifugo Project)
+# Ubiquitous Language (Duel Daifugo Project)
 
-This document defines the common terminology used across the codebase, documentation, and communication for the Daifugo game project.
+This document defines the common terminology used across the codebase, documentation, and communication for the Duel Daifugo game project.
 
 ## 1. Core Entities
 

@@ -1,8 +1,8 @@
-# 大富豪 (Daifugo) - 1対1 カードゲーム
+# デュエル大富豪 (Duel Daifugo)
 
-[English](README.md) | [日本語](README_JP.md)
+[**ブラウザでプレイ**](https://tomotomo.github.io/vibe-game/) | [English](./README.md)
 
-Unityで構築され、Gemini CLIを使用して生成された、日本の人気カードゲーム「大富豪」のシンプルかつ魅力的な1対1実装です。
+Unity WebGLで作られた、シンプルな1対1の大富豪ゲームです。
 
 ## 特徴
 
