@@ -9,18 +9,18 @@ namespace Daifugo.Game
 {
     public class GameController : MonoBehaviour
     {
-        [SerializeField] private UIManager _uiManager;
+        [SerializeField] internal UIManager _uiManager;
 
-        private RuleManager _ruleManager;
+        internal RuleManager _ruleManager;
         private CpuAI _cpuAI;
 
         private List<Card> _playerHand = new List<Card>();
         private List<Card> _cpuHand = new List<Card>();
         private HashSet<Card> _selectedCards = new HashSet<Card>();
-        private List<Card> _fieldCards = new List<Card>(); // The most recent set of cards played
+        internal List<Card> _fieldCards = new List<Card>(); // The most recent set of cards played
 
-        private bool _isPlayerTurn;
-        private bool _gameActive;
+        internal bool _isPlayerTurn;
+        internal bool _gameActive;
         
         // Stats
         private const string KEY_GAMES = "Stats_Games";
@@ -150,35 +150,34 @@ namespace Daifugo.Game
                     _uiManager.UpdateCpuInfo(_cpuHand.Count);
                 }
         
-                // --- Turn Logic ---
-        
-                private void StartPlayerTurn(bool isNewRound)
-                {
-                    if (!_gameActive) return;
-                    _isPlayerTurn = true;
-                    
-                    // Button Visibility:
-                    // Lead: Play, Exit
-                    // Follow: Play, Pass, Exit
-                    bool canPass = !isNewRound;
-                    _uiManager.ToggleButtons(true, canPass, false, true);
-                    
-                    _uiManager.PlayButton.interactable = true;
-                    if (canPass) _uiManager.PassButton.interactable = true;
-                    
-                    if (isNewRound)
-                    {
-                        _uiManager.UpdateMessage("Your Turn (Lead)");
-                        _fieldCards.Clear();
-                        _ruleManager.ResetField();
-                        _uiManager.UpdateField(null);
-                    }
-                    else
-                    {
-                        _uiManager.UpdateMessage("Your Turn");
-                    }
-                }
-        
+                        // --- Turn Logic ---
+                
+                        internal void StartPlayerTurn(bool isNewRound)
+                        {
+                            if (!_gameActive) return;
+                            _isPlayerTurn = true;
+                            
+                            // Button Visibility:
+                            // Lead: Play, Exit
+                            // Follow: Play, Pass, Exit
+                            bool canPass = !isNewRound;
+                            _uiManager.ToggleButtons(true, canPass, false, true);
+                            
+                            _uiManager.PlayButton.interactable = true;
+                            if (canPass) _uiManager.PassButton.interactable = true;
+                            
+                            if (isNewRound)
+                            {
+                                _uiManager.UpdateMessage("Your Turn (Lead)");
+                                _fieldCards = new List<Card>();
+                                _ruleManager.ResetField();
+                                _uiManager.UpdateField(null);
+                            }
+                            else
+                            {
+                                _uiManager.UpdateMessage("Your Turn");
+                            }
+                        }        
                         private void OnPlayerCardClicked(Card card)
                         {
                             if (!_isPlayerTurn) return;
@@ -220,13 +219,12 @@ namespace Daifugo.Game
                     else
                     {
                         _uiManager.UpdateMessage("Cannot play these cards!");
-                    }
-                }
-        
-                private void PlayerPass()
-                {
-                    if (!_isPlayerTurn) return;
-                    // Cannot pass if lead (field empty)
+                                }
+                            }
+                    
+                            internal void PlayerPass()
+                            {
+                                if (!_isPlayerTurn) return;                    // Cannot pass if lead (field empty)
                     if (_fieldCards == null || _fieldCards.Count == 0)
                     {
                          _uiManager.UpdateMessage("Cannot pass on lead!");
@@ -311,38 +309,37 @@ namespace Daifugo.Game
                     _uiManager.UpdateMessage("Field Cleared (8 Cut)");
                     
                     if (isPlayer) StartPlayerTurn(true);
-                    else StartCoroutine(CpuTurnRoutine(true));
-                }
-        
-                private IEnumerator ProcessPass(bool playerPassed)
-                {
-                    // If one passes, the other becomes lead?
-                    // Spec: "パスした場合は場が流れる" -> Confirm: "自分（最後に出した側）が親になる"
-                    // So if Player passed, CPU (who played last) becomes lead.
-                    // If CPU passed, Player (who played last) becomes lead.
+                                else StartCoroutine(CpuTurnRoutine(true));
+                            }
                     
-                    // Hide buttons during transition
-                    _uiManager.ToggleButtons(false, false, false, false);
+                            internal IEnumerator ProcessPass(bool playerPassed)
+                            {
+                                // If one passes, the other becomes lead?
+                                // Spec: "パスした場合は場が流れる" -> Confirm: "自分（最後に出した側）が親になる"
+                                // So if Player passed, CPU (who played last) becomes lead.
+                                // If CPU passed, Player (who played last) becomes lead.
+                                
+                                // Hide buttons during transition
+                                _uiManager.ToggleButtons(false, false, false, false);
+                                
+                                yield return new WaitForSeconds(0.5f);
+                                _fieldCards = new List<Card>();
+                                _ruleManager.ResetField();
+                                _uiManager.UpdateField(null);
+                                _uiManager.UpdateMessage("Field Cleared");
+                                yield return new WaitForSeconds(0.5f);
                     
-                    yield return new WaitForSeconds(0.5f);
-                    _fieldCards.Clear();
-                    _ruleManager.ResetField();
-                    _uiManager.UpdateField(null);
-                    _uiManager.UpdateMessage("Field Cleared");
-                    yield return new WaitForSeconds(0.5f);
-        
-                    if (playerPassed)
-                    {
-                        // Player passed, so CPU won the round -> CPU Lead
-                        StartCoroutine(CpuTurnRoutine(true));
-                    }
-                    else
-                    {
-                        // CPU passed, so Player won the round -> Player Lead
-                        StartPlayerTurn(true);
-                    }
-                }
-        
+                                if (playerPassed)
+                                {
+                                    // Player passed, so CPU won the round -> CPU Lead
+                                    StartCoroutine(CpuTurnRoutine(true));
+                                }
+                                else
+                                {
+                                    // CPU passed, so Player won the round -> Player Lead
+                                    StartPlayerTurn(true);
+                                }
+                            }        
                 private IEnumerator CpuTurnRoutine(bool isNewRound)
                 {
                     _isPlayerTurn = false;
