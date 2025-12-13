@@ -4,6 +4,11 @@
 
 Unity WebGLで作られた、シンプルな1対1の大富豪ゲームです。
 
+## GitHub Pages
+
+以下のURLからブラウザで直接プレイできます：
+https://tomotomo.github.io/vibe-game/
+
 ## 特徴
 
 - **1対1 対戦**: 戦略的なCPU対戦相手とプレイします。

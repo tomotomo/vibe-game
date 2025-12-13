@@ -4,6 +4,11 @@
 
 A simple 1 vs 1 Daifugo (Tycoon) card game built with Unity for WebGL.
 
+## GitHub Pages
+
+Play the game directly in your browser:
+https://tomotomo.github.io/vibe-game/
+
 ## Features
 
 - **1vs1 Gameplay**: Play against a strategic CPU opponent.
