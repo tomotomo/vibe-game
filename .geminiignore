@@ -1,0 +1,29 @@
+# Unity generated folders
+Library/
+Temp/
+Obj/
+Builds/
+Logs/
+UserSettings/
+
+# System/IDE files
+.DS_Store
+.vs/
+.gradle/
+*.csproj
+*.sln
+*.pidb
+*.unityproj
+*.suo
+*.user
+*.userprefs
+*.idea/
+
+# Git
+.git/
+
+# Large binary assets or build artifacts not needed for code context
+# (Uncomment if you want to ignore all assets, but usually we want to see them if referenced)
+# *.psd
+# *.exr
+# *.tga
